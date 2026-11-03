@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>50/30/20 Budget Calculator: Needs, Wants and Savings</title>
+<meta name="description" content="Free 50/30/20 budget calculator. Enter your take-home pay to see how much goes to needs, wants and savings, and compare it with what you spend now.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body data-promo="budget">
+<main>
+  <nav class="top"><a href="../">← All free tools</a></nav>
+  <h1>50/30/20 budget calculator</h1>
+  <p class="lede">The 50/30/20 rule splits take-home pay into 50% needs, 30% wants and 20% savings or debt payments. Change the split if it doesn't fit your life.</p>
+  <div class="card grid">
+    <div class="grid g2">
+      <div><label for="pay">Monthly take-home pay</label><input id="pay" type="number" min="0" step="10" value="3000" inputmode="decimal"></div>
+      <div><label for="split">Split</label><select id="split"><option value="50,30,20">50 / 30 / 20 (classic)</option><option value="60,20,20">60 / 20 / 20 (high rent)</option><option value="70,20,10">70 / 20 / 10 (tight month)</option><option value="40,30,30">40 / 30 / 30 (saver)</option></select></div>
+    </div>
+    <p class="muted" style="margin:0">Optional: what you spend now, to compare.</p>
+    <div class="grid g3">
+      <div><label for="n">Needs now</label><input id="n" type="number" min="0" inputmode="decimal" placeholder="e.g. 1700"></div>
+      <div><label for="w">Wants now</label><input id="w" type="number" min="0" inputmode="decimal" placeholder="e.g. 900"></div>
+      <div><label for="s">Saving now</label><input id="s" type="number" min="0" inputmode="decimal" placeholder="e.g. 400"></div>
+    </div>
+  </div>
+  <div class="result" id="out"></div>
+  <section class="faq">
+    <h2>What counts as what?</h2>
+    <b>Needs</b><p>Rent or mortgage, utilities, groceries, insurance, minimum debt payments, transport to work.</p>
+    <b>Wants</b><p>Eating out, subscriptions, hobbies, shopping, holidays.</p>
+    <b>Savings</b><p>Emergency fund, retirement, investing, and extra debt payments above the minimum.</p>
+  </section>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function f(x){return x.toLocaleString(undefined,{maximumFractionDigits:0})}
+  function calc(){
+    var pay=+$("pay").value||0,sp=$("split").value.split(",").map(Number),names=["Needs","Wants","Savings"],now=[$("n").value,$("w").value,$("s").value];
+    $("out").innerHTML=names.map(function(nm,i){
+      var tgt=pay*sp[i]/100,cur=now[i]===""?null:+now[i],note="";
+      if(cur!==null){var d=cur-tgt;note='<div class="muted" style="font-size:.9rem">You spend '+f(cur)+" now, "+(Math.abs(d)<1?"right on target":(d>0?f(d)+(i===2?" more than the target 🎉":" over target"):f(-d)+(i===2?" short of the target":" under target")))+"</div>"}
+      return '<div style="margin-bottom:12px"><div class="row" style="border:0;padding:0"><span><b>'+nm+'</b> ('+sp[i]+'%)</span><b>'+f(tgt)+'</b></div><div class="bar"><i style="width:'+sp[i]+'%"></i></div>'+note+'</div>';
+    }).join("")+'<div class="muted" style="font-size:.9rem">Per year you would save about <b>'+f(pay*sp[2]/100*12)+'</b>.</div>';
+  }
+  ["pay","split","n","w","s"].forEach(function(i){$(i).addEventListener("input",calc)});
+  calc();
+})();
+</script>
+<script src="../site.js"></script>
+</body>
+</html>

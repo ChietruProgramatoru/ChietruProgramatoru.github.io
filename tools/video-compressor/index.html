@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Video Compressor: Make Videos Smaller in Your Browser</title>
+<meta name="description" content="Compress videos for free in your browser to share on Discord, WhatsApp or email. Nothing is uploaded. Pick a target size or quality. No sign-up, no watermark.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<style>
+.drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:32px 16px;text-align:center;cursor:pointer;background:var(--card)}
+.drop.over{border-color:var(--accent);background:var(--soft)}
+.drop input{display:none}
+video{width:100%;border-radius:12px;background:#000;max-height:360px}
+progress{width:100%;height:14px;accent-color:var(--accent-2)}
+.save{color:var(--accent-2);font-weight:700}
+</style>
+</head>
+<body data-promo="none">
+<main>
+  <nav class="top"><a href="../">← All free tools</a></nav>
+  <h1>Free video compressor</h1>
+  <p class="lede">Make a video small enough for Discord, WhatsApp or email. It runs in your browser, so your video is never uploaded. Free, no watermark, no sign-up.</p>
+  <div class="card grid">
+    <div class="grid g2">
+      <div><label for="target">Aim for</label><select id="target">
+        <option value="size:10">Under 10 MB (Discord)</option>
+        <option value="size:16">Under 16 MB (WhatsApp)</option>
+        <option value="size:25" selected>Under 25 MB (email)</option>
+        <option value="rate:2500">Good quality (2.5 Mbps)</option>
+        <option value="rate:1000">Small (1 Mbps)</option>
+      </select></div>
+      <div><label for="res">Max height</label><select id="res"><option value="1080">1080p</option><option value="720" selected>720p</option><option value="480">480p</option><option value="360">360p</option></select></div>
+    </div>
+    <label class="drop" id="drop"><input id="pick" type="file" accept="video/*">
+      <div style="font-size:2rem">🎬</div><b>Choose a video or drop it here</b><div class="muted">MP4, MOV, WebM</div></label>
+    <p class="muted" style="margin:0;font-size:.9rem">Heads-up: your browser re-records the video as it plays, so a 2-minute clip takes about 2 minutes. Keep this tab open and visible while it works.</p>
+  </div>
+  <div class="result" id="work" hidden>
+    <video id="v" playsinline muted></video>
+    <p id="status" style="margin:10px 0 6px"></p>
+    <progress id="prog" max="1" value="0"></progress>
+    <p id="done" style="margin:12px 0 0"></p>
+  </div>
+  <section class="faq">
+    <h2>FAQ</h2>
+    <b>Is it really free?</b><p>Yes. No paid tier, no download limit, no watermark. Your own device does the work, so it costs nothing to run. A coffee tip below is welcome but never required.</p>
+    <b>What format do I get?</b><p>MP4 in browsers that support it (recent Chrome, Edge and Safari), otherwise WebM. WebM plays in Chrome, Firefox, Discord and most phones.</p>
+    <b>Why didn't it hit my target size exactly?</b><p>Browser encoders aim for a bitrate, so the result can land a little above or below. If it's over, pick a smaller target or lower resolution and run it again.</p>
+  </section>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function mb(b){return (b/1048576).toFixed(1)+" MB"}
+  function pickMime(){
+    var c=["video/mp4;codecs=avc1.42E01F,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+    for(var i=0;i<c.length;i++)if(window.MediaRecorder&&MediaRecorder.isTypeSupported(c[i]))return c[i];
+    return "";
+  }
+  var busy=false;
+  async function run(file){
+    if(busy)return;
+    if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){$("work").hidden=false;$("status").textContent="Sorry, this browser can't compress video. Try Chrome, Edge or Firefox on a computer.";return}
+    busy=true;$("work").hidden=false;$("done").innerHTML="";$("prog").value=0;
+    var v=$("v"),url=URL.createObjectURL(file);v.src=url;v.muted=false;
+    $("status").textContent="Loading video…";
+    await new Promise(function(r,j){v.onloadedmetadata=r;v.onerror=function(){j(new Error("Your browser can't open this video file."))}}).catch(function(e){$("status").textContent=e.message;busy=false;throw e});
+    var dur=v.duration,maxH=+$("res").value,h=Math.min(v.videoHeight,maxH),w=Math.round(v.videoWidth*h/v.videoHeight/2)*2;h=Math.round(h/2)*2;
+    var t=$("target").value.split(":"),vbps;
+    if(t[0]==="size"){var bits=+t[1]*8*1048576*0.92;vbps=Math.max(150000,Math.min(8000000,bits/dur-96000))}else vbps=+t[1]*1000;
+    var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d");
+    var stream=c.captureStream(30);
+    // Route audio through Web Audio into the recording only, so it isn't played out loud.
+    try{
+      if(!v._ac){v._ac=new (window.AudioContext||window.webkitAudioContext)();v._dst=v._ac.createMediaStreamDestination();v._ac.createMediaElementSource(v).connect(v._dst)}
+      await v._ac.resume();v._dst.stream.getAudioTracks().forEach(function(a){stream.addTrack(a)});
+    }catch(e){}
+    var mime=pickMime(),rec=new MediaRecorder(stream,{mimeType:mime||undefined,videoBitsPerSecond:Math.round(vbps),audioBitsPerSecond:96000}),chunks=[];
+    rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data)};
+    var stopped=new Promise(function(r){rec.onstop=r});
+    var draw=function(){if(v.ended||v.paused&&v.currentTime>0)return;x.drawImage(v,0,0,w,h);$("prog").value=v.currentTime/dur;$("status").textContent="Compressing… "+Math.round(v.currentTime/dur*100)+"% ("+Math.round(dur-v.currentTime)+"s left)";requestAnimationFrame(draw)};
+    v.currentTime=0;rec.start(1000);
+    try{await v.play()}catch(e){v.muted=true;await v.play()}
+    draw();
+    await new Promise(function(r){v.onended=r});
+    rec.stop();await stopped;
+    var type=(mime||"video/webm").split(";")[0],out=new Blob(chunks,{type:type}),u=URL.createObjectURL(out);
+    var name=file.name.replace(/\.[^.]+$/,"")+"-compressed."+(type==="video/mp4"?"mp4":"webm");
+    $("prog").value=1;$("status").innerHTML="Done: "+mb(file.size)+" → "+mb(out.size)+' <span class="save">'+(out.size<file.size?"−"+Math.round((1-out.size/file.size)*100)+"%":"")+"</span> · "+w+"×"+h;
+    if(out.size>=file.size)$("status").innerHTML+="<br>The original was already well compressed. Try a smaller target or resolution.";
+    var a=document.createElement("a");a.className="btn";a.href=u;a.download=name;a.textContent="⬇️ Download "+name;$("done").appendChild(a);
+    v.pause();v.removeAttribute("src");v.load();URL.revokeObjectURL(url);busy=false;
+  }
+  $("pick").onchange=function(){if(this.files[0])run(this.files[0]).catch(function(){});this.value=""};
+  var d=$("drop");
+  ["dragenter","dragover"].forEach(function(e){d.addEventListener(e,function(ev){ev.preventDefault();d.classList.add("over")})});
+  ["dragleave","drop"].forEach(function(e){d.addEventListener(e,function(ev){ev.preventDefault();d.classList.remove("over")})});
+  d.addEventListener("drop",function(ev){var f=ev.dataTransfer.files[0];if(f&&/^video\//.test(f.type))run(f).catch(function(){})});
+})();
+</script>
+<script src="../site.js"></script>
+</body>
+</html>

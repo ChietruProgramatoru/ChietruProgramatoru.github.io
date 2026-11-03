@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Christmas Countdown: How Many Days Until Christmas?</title>
+<meta name="description" content="Live countdown to Christmas Day in days, hours, minutes and seconds, in your own time zone. Plus how many weekends and Fridays are left before Christmas.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body data-promo="christmas">
+<main>
+  <nav class="top"><a href="../">← All free tools</a></nav>
+  <h1>How many days until Christmas?</h1>
+  <p class="lede" id="sub">Counting down to Christmas Day in your time zone.</p>
+  <div class="units" aria-live="off">
+    <div><b id="d">0</b><span>days</span></div>
+    <div><b id="h">0</b><span>hours</span></div>
+    <div><b id="m">0</b><span>min</span></div>
+    <div><b id="s">0</b><span>sec</span></div>
+  </div>
+  <div class="result">
+    <div class="row"><span>Weekends left before Christmas</span><b id="wk">0</b></div>
+    <div class="row"><span>Fridays left (paydays for many)</span><b id="fr">0</b></div>
+    <div class="row"><span>Sleeps until Christmas</span><b id="sl">0</b></div>
+    <div class="row"><span>Days until New Year's Day</span><b id="ny">0</b></div>
+  </div>
+  <h2>Gift-shopping pace</h2>
+  <div class="card grid g2">
+    <div><label for="gifts">Gifts still to buy</label><input id="gifts" type="number" min="0" value="10" inputmode="numeric"></div>
+    <div><label>You need to buy about</label><div class="big" id="pace" style="font-size:1.6rem">0</div></div>
+  </div>
+  <section class="faq">
+    <h2>FAQ</h2>
+    <b>When does this countdown end?</b>
+    <p>At midnight on December 25 in the time zone your device is set to. After Christmas it starts counting to next year's.</p>
+    <b>How are "sleeps" counted?</b>
+    <p>One sleep for each night between today and Christmas morning.</p>
+  </section>
+</main>
+<script>
+(function(){
+  function xmas(now){var y=now.getFullYear();var t=new Date(y,11,25);if(now>=new Date(y,11,26))t=new Date(y+1,11,25);return t;}
+  function pad(n){return String(n).padStart(2,"0");}
+  function countDay(from,to,dow){var c=0,d=new Date(from.getFullYear(),from.getMonth(),from.getDate()+1);while(d<to){if(d.getDay()===dow)c++;d.setDate(d.getDate()+1);}return c;}
+  var el=function(i){return document.getElementById(i)};
+  function tick(){
+    var now=new Date(),t=xmas(now),ms=t-now;
+    if(ms<=0){el("sub").textContent="🎄 Merry Christmas! It's today.";ms=0;}
+    else el("sub").textContent="Counting down to Christmas Day "+t.getFullYear()+" in your time zone.";
+    var sec=Math.floor(ms/1000);
+    el("d").textContent=Math.floor(sec/86400);el("h").textContent=pad(Math.floor(sec%86400/3600));
+    el("m").textContent=pad(Math.floor(sec%3600/60));el("s").textContent=pad(sec%60);
+  }
+  function daily(){
+    var now=new Date(),t=xmas(now);
+    var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    var sleeps=Math.round((t-today)/86400000);
+    el("sl").textContent=Math.max(0,sleeps);
+    el("wk").textContent=countDay(today,t,6)+(today.getDay()===6&&t>today?1:0);
+    el("fr").textContent=countDay(today,t,5)+(today.getDay()===5&&t>today?1:0);
+    var ny=new Date(now.getFullYear()+1,0,1);el("ny").textContent=Math.round((ny-today)/86400000);
+    var g=Math.max(0,+el("gifts").value||0),weeks=Math.max(1,sleeps/7);
+    el("pace").textContent=g===0?"Done! 🎁":(g/weeks).toFixed(1)+" gifts / week";
+  }
+  el("gifts").addEventListener("input",daily);
+  tick();daily();setInterval(tick,1000);
+})();
+</script>
+<script src="../site.js"></script>
+</body>
+</html>

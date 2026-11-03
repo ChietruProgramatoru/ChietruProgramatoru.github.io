@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debt Payoff Calculator: When Will I Be Debt-Free?</title>
+<meta name="description" content="Free debt payoff calculator. Enter your balance, interest rate and monthly payment to see your debt-free date, total interest, and how much an extra payment saves.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📉</text></svg>">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body data-promo="debt">
+<main>
+  <nav class="top"><a href="../">← All free tools</a></nav>
+  <h1>When will I be debt-free?</h1>
+  <p class="lede">Enter one debt (or add up several) to see your payoff date and what paying a little extra would save.</p>
+  <div class="card grid">
+    <div class="grid g3">
+      <div><label for="bal">Balance owed</label><input id="bal" type="number" min="0" value="5000" inputmode="decimal"></div>
+      <div><label for="apr">Interest rate (APR %)</label><input id="apr" type="number" min="0" step="0.1" value="22.9" inputmode="decimal"></div>
+      <div><label for="pay">Monthly payment</label><input id="pay" type="number" min="0" value="200" inputmode="decimal"></div>
+    </div>
+    <div><label for="extra">Extra per month (try it)</label><input id="extra" type="range" min="0" max="500" step="10" value="50" style="padding:0"><div class="muted" id="exv"></div></div>
+  </div>
+  <div class="result" id="out"></div>
+  <p class="muted" style="font-size:.88rem">Estimate only: assumes a fixed rate, interest added monthly and no new charges. Not financial advice.</p>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function f(x){return x.toLocaleString(undefined,{maximumFractionDigits:0})}
+  function sim(b,apr,p){var r=apr/1200,m=0,int=0;while(b>0.005&&m<1200){var i=b*r;if(p<=i)return null;int+=i;b=b+i-p;m++}return {m:m,int:int}}
+  function when(m){var d=new Date();d.setMonth(d.getMonth()+m);return d.toLocaleDateString(undefined,{month:"long",year:"numeric"})}
+  function len(m){var y=Math.floor(m/12),r=m%12;return (y?y+" yr ":"")+(r?r+" mo":"")||"0 mo"}
+  function calc(){
+    var b=+$("bal").value||0,a=+$("apr").value||0,p=+$("pay").value||0,x=+$("extra").value||0;
+    $("exv").textContent="+"+f(x)+" per month";
+    var base=sim(b,a,p),fast=sim(b,a,p+x),h="";
+    if(!base){h='<p><b>This payment doesn\'t cover the monthly interest</b> ('+f(b*a/1200)+'), so the balance never goes down. Try a bigger payment.</p>'}
+    else{
+      h+='<div class="row"><span>Debt-free in</span><b>'+len(base.m)+'</b></div><div class="row"><span>Debt-free date</span><b>'+when(base.m)+'</b></div><div class="row"><span>Total interest paid</span><b>'+f(base.int)+'</b></div>';
+      if(x>0&&fast){h+='<h2 style="margin-top:18px">With '+f(x)+' extra a month</h2><div class="row"><span>Debt-free</span><b>'+when(fast.m)+'</b></div><div class="row"><span>Months sooner</span><b>'+(base.m-fast.m)+'</b></div><div class="row"><span>Interest saved</span><b style="color:var(--accent-2)">'+f(base.int-fast.int)+'</b></div>'}
+    }
+    $("out").innerHTML=h;
+  }
+  ["bal","apr","pay","extra"].forEach(function(i){$(i).addEventListener("input",calc)});
+  calc();
+})();
+</script>
+<script src="../site.js"></script>
+</body>
+</html>

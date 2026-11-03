@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bill Splitter with Tip: Split a Restaurant Bill Evenly or by Item</title>
+<meta name="description" content="Free bill and tip splitter. Split a restaurant bill evenly or by who ordered what, with tip and tax shared fairly. Works on your phone, no sign-up.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body data-promo="budget">
+<main>
+  <nav class="top"><a href="../">← All free tools</a></nav>
+  <h1>Bill and tip splitter</h1>
+  <p class="lede">Split the check evenly, or by what each person ordered. Tax and tip get shared in proportion.</p>
+  <div class="card grid">
+    <div class="grid g3">
+      <div><label for="sub">Bill before tip</label><input id="sub" type="number" min="0" step="0.01" value="84.50" inputmode="decimal"></div>
+      <div><label for="tip">Tip %</label><input id="tip" type="number" min="0" step="1" value="15" inputmode="decimal"></div>
+      <div><label for="cur">Currency</label><select id="cur"><option>$</option><option>€</option><option>£</option><option>lei</option><option>₹</option><option>¥</option></select></div>
+    </div>
+    <div class="grid g2">
+      <div><label for="mode">How to split</label><select id="mode"><option value="even">Evenly</option><option value="item">By what each person ordered</option></select></div>
+      <div id="peopleWrap"><label for="people">Number of people</label><input id="people" type="number" min="1" value="4" inputmode="numeric"></div>
+    </div>
+    <div id="items" hidden></div>
+    <div id="itemBtns" hidden><button class="ghost" id="add" type="button">+ Add person</button></div>
+    <div><label><input id="round" type="checkbox" style="width:auto;min-height:0;margin-right:6px">Round each share up to a whole amount</label></div>
+  </div>
+  <div class="result" id="out"></div>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var people=[{n:"Alex",v:24},{n:"Sam",v:31.5},{n:"Jo",v:29}];
+  function money(x){return $("cur").value==="lei"?x.toFixed(2)+" lei":$("cur").value+x.toFixed(2);}
+  function drawItems(){
+    var box=$("items");box.innerHTML="";
+    people.forEach(function(p,i){
+      var r=document.createElement("div");r.className="grid g2";r.style.marginBottom="8px";
+      r.innerHTML='<input aria-label="Name" value="'+p.n.replace(/"/g,"&quot;")+'"><input aria-label="Their items" type="number" min="0" step="0.01" inputmode="decimal" value="'+p.v+'">';
+      r.children[0].oninput=function(e){p.n=e.target.value;calc()};
+      r.children[1].oninput=function(e){p.v=+e.target.value||0;calc()};
+      box.appendChild(r);
+    });
+  }
+  function calc(){
+    var sub=+$("sub").value||0,tip=(+$("tip").value||0)/100,round=$("round").checked,item=$("mode").value==="item";
+    $("items").hidden=$("itemBtns").hidden=!item;$("peopleWrap").hidden=item;
+    var total=sub*(1+tip),rows=[];
+    if(!item){
+      var n=Math.max(1,Math.floor(+$("people").value||1)),each=total/n;
+      if(round)each=Math.ceil(each);
+      rows.push(["Each person pays",money(each)]);
+    }else{
+      var listed=people.reduce(function(a,p){return a+p.v},0);
+      var base=listed>0?listed:1;
+      people.forEach(function(p){var s=p.v/base*total;if(round)s=Math.ceil(s);rows.push([p.n||"Person",money(s)]);});
+      if(Math.abs(listed-sub)>0.009)rows.push(["⚠️ Items add up to "+money(listed)+", bill is "+money(sub),"shares scaled to match"]);
+    }
+    rows.unshift(["Tip",money(sub*tip)],["Total with tip",money(total)]);
+    $("out").innerHTML=rows.map(function(r){return '<div class="row"><span>'+r[0].replace(/</g,"&lt;")+'</span><b>'+r[1]+'</b></div>'}).join("");
+  }
+  $("add").onclick=function(){people.push({n:"Person "+(people.length+1),v:0});drawItems();calc();};
+  ["sub","tip","cur","mode","people","round"].forEach(function(i){$(i).addEventListener("input",calc);$(i).addEventListener("change",calc)});
+  drawItems();calc();
+})();
+</script>
+<script src="../site.js"></script>
+</body>
+</html>

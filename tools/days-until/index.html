@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Days Until Any Date: Free Countdown You Can Share</title>
+<meta name="description" content="Count the days until a birthday, trip, wedding or holiday. Make a live countdown and share it as a link. Free, no sign-up.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body data-promo="planner">
+<main>
+  <nav class="top"><a href="../">← All free tools</a></nav>
+  <h1 id="title">Days until any date</h1>
+  <p class="lede" id="sub">Pick a date, name it, then share the live countdown as a link.</p>
+  <div class="card grid g2">
+    <div><label for="name">What are you counting down to?</label><input id="name" maxlength="60" placeholder="My birthday"></div>
+    <div><label for="date">Date</label><input id="date" type="date"></div>
+  </div>
+  <div class="units" style="margin-top:16px">
+    <div><b id="d">0</b><span>days</span></div>
+    <div><b id="h">0</b><span>hours</span></div>
+    <div><b id="m">0</b><span>min</span></div>
+    <div><b id="s">0</b><span>sec</span></div>
+  </div>
+  <div class="result">
+    <div class="row"><span>Weeks to go</span><b id="w">0</b></div>
+    <div class="row"><span>Weekdays to go</span><b id="wd">0</b></div>
+    <div class="row"><span>Weekends to go</span><b id="we">0</b></div>
+    <p style="margin:14px 0 0"><button id="share" type="button">🔗 Copy share link</button> <span id="copied" class="muted"></span></p>
+  </div>
+  <h2>Quick picks</h2>
+  <p id="picks" class="support"></p>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var q=new URLSearchParams(location.search);
+  function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+  function next(m,d){var n=new Date(),t=new Date(n.getFullYear(),m,d);if(t<=n)t=new Date(n.getFullYear()+1,m,d);return t}
+  var picks=[["New Year",next(0,1)],["Valentine's Day",next(1,14)],["Halloween",next(9,31)],["Christmas",next(11,25)],["Summer (June 21)",next(5,21)]];
+  picks.forEach(function(p){var b=document.createElement("button");b.className="ghost";b.type="button";b.textContent=p[0];b.onclick=function(){$("name").value=p[0];$("date").value=iso(p[1]);upd()};$("picks").appendChild(b)});
+  $("name").value=q.get("n")||"New Year";
+  $("date").value=/^\d{4}-\d{2}-\d{2}$/.test(q.get("d")||"")?q.get("d"):iso(next(0,1));
+  function target(){var p=$("date").value.split("-");return p.length===3?new Date(+p[0],p[1]-1,+p[2]):null}
+  function upd(){
+    var n=$("name").value.trim()||"your date";
+    $("title").textContent="Days until "+n;document.title="Days until "+n+" | Free countdown";
+    var t=target();if(!t)return;
+    var today=new Date();today=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    var wd=0,we=0,d=new Date(today);
+    while(d<t&&wd+we<4000){var g=d.getDay();if(g===0||g===6){if(g===6)we++}else wd++;d.setDate(d.getDate()+1)}
+    $("wd").textContent=wd;$("we").textContent=we;$("w").textContent=Math.max(0,(t-today)/604800000).toFixed(1);
+    history.replaceState(null,"","?n="+encodeURIComponent($("name").value.trim())+"&d="+$("date").value);
+    tick();
+  }
+  function tick(){
+    var t=target();if(!t)return;var ms=Math.max(0,t-new Date()),s=Math.floor(ms/1000);
+    $("sub").textContent=ms===0?"🎉 It's here!":t.toDateString();
+    $("d").textContent=Math.floor(s/86400);$("h").textContent=String(Math.floor(s%86400/3600)).padStart(2,"0");
+    $("m").textContent=String(Math.floor(s%3600/60)).padStart(2,"0");$("s").textContent=String(s%60).padStart(2,"0");
+  }
+  $("share").onclick=function(){var u=location.href;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){$("copied").textContent="Copied!"},function(){prompt("Copy this link:",u)})};
+  $("name").addEventListener("input",upd);$("date").addEventListener("change",upd);
+  upd();setInterval(tick,1000);
+})();
+</script>
+<script src="../site.js"></script>
+</body>
+</html>
