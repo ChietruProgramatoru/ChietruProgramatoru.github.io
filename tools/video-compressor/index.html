@@ -274,7 +274,7 @@ async function fastCompress(it, s) {
   const fps = s.fps && s.fps < srcFps - 0.5 ? s.fps : 0;
 
   // If it already fits the size goal untouched, keep the original.
-  if (s.mode === 's' && !it.trim && it.file.size <= s.targetMB * 1048576 && !s.res) return { kept: true, blob: it.file, w: sw, h: sh, codec: '' };
+  if (s.mode === 's' && !it.trim && it.file.size <= s.targetMB * 1048576 && k === 1 && !fps) return { kept: true, blob: it.file, w: sw, h: sh, codec: '' };
 
   const container = s.fmt;
   const codecList = s.codec !== 'auto' ? [s.codec, ...(container === 'mp4' ? ['avc', 'hevc', 'vp9', 'av1'] : ['vp9', 'av1', 'vp8'])] : (container === 'mp4' ? ['avc', 'hevc', 'vp9', 'av1'] : ['vp9', 'av1', 'vp8']);
