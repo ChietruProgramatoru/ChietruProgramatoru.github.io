@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Freelance Hourly Rate Calculator: What Should I Charge?</title><meta name="description" content="Work out the hourly rate you need as a freelancer, including taxes, expenses, time off and unbillable hours. Free and private."><link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💸</text></svg>">
+<meta property="og:title" content="Freelance Hourly Rate Calculator: What Should I Charge?"><meta property="og:description" content="Work out the hourly rate you need as a freelancer, including taxes, expenses, time off and unbillable hours. Free and private."></head><body>
+<header><div class="wrap"><a class="logo" href="index.html">Free<span>Money</span>Tools</a><nav><a href="invoice-generator.html">Invoice</a><a href="hourly-rate-calculator.html">Rate</a><a href="debt-payoff-calculator.html">Debt</a><a href="savings-goal-calculator.html">Savings</a><a href="christmas-budget-calculator.html">Christmas</a></nav></div></header>
+<main class="wrap"><h1>Freelance hourly rate calculator</h1><p class="lead">What you need to charge per hour to take home the income you want.</p>
+<div class="card"><div class="row">
+<div><label>Take-home income goal / year</label><input id="goal" type="number" value="50000"></div>
+<div><label>Business expenses / year</label><input id="exp" type="number" value="4000"></div>
+<div><label>Tax rate %</label><input id="tax" type="number" value="25"></div>
+<div><label>Hours worked / week</label><input id="hrs" type="number" value="40"></div>
+<div><label>Billable share of hours %</label><input id="bill" type="number" value="65"></div>
+<div><label>Weeks off / year</label><input id="off" type="number" value="6"></div></div>
+<div class="result"><div>Minimum hourly rate</div><div class="big" id="rate"></div><div id="det"></div></div></div>
+<div class="card promo noprint"><b>Know what to say when you send that rate</b><p>The Client Script Pack has proven email templates for quoting, raising rates and chasing late invoices.</p><a class="btn" href="https://rokeru.gumroad.com/l/fojimv">Get it for $9 →</a></div>
+<section class="faq"><h2>How this works</h2><p>Your rate has to cover your take-home pay, taxes and business costs, but only billable hours earn money. Admin, sales and learning take time too, which is why the billable share is usually 50–75%.</p></section></main>
+<footer><div class="wrap">Free, private calculators: everything runs in your browser and nothing you type is sent anywhere. Not financial advice.<br>Made by <a href="/">Rokeru</a> · <a href="/">☕ Buy me a coffee</a> · printable planners and spreadsheets at <a href="https://rokeru.gumroad.com">rokeru.gumroad.com</a></div></footer>
+<script>const $=s=>document.querySelector(s);const money=(n,c)=>(isFinite(n)?n:0).toLocaleString(undefined,{style:"currency",currency:c||"USD"});function calc(){const g=+$("#goal").value,e=+$("#exp").value,t=Math.min(+$("#tax").value,95)/100,h=+$("#hrs").value,b=+$("#bill").value/100,o=+$("#off").value;const gross=g/(1-t)+e;const hours=h*b*Math.max(52-o,0);const r=gross/hours;$("#rate").textContent=money(r);$("#det").innerHTML=`You need about <b>${money(gross)}</b> in revenue from <b>${Math.round(hours)}</b> billable hours a year. Day rate (8h): <b>${money(r*8)}</b>.`}
+document.addEventListener("input",calc);calc();</script></body></html>

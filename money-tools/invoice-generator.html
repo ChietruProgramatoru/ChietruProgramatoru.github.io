@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Invoice Generator: Make a PDF Invoice Online, No Sign-Up</title><meta name="description" content="Create a professional invoice in your browser and download it as a PDF. Free, no account, no watermark. Your data never leaves your device."><link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💸</text></svg>">
+<meta property="og:title" content="Free Invoice Generator: Make a PDF Invoice Online, No Sign-Up"><meta property="og:description" content="Create a professional invoice in your browser and download it as a PDF. Free, no account, no watermark. Your data never leaves your device."></head><body>
+<header><div class="wrap"><a class="logo" href="index.html">Free<span>Money</span>Tools</a><nav><a href="invoice-generator.html">Invoice</a><a href="hourly-rate-calculator.html">Rate</a><a href="debt-payoff-calculator.html">Debt</a><a href="savings-goal-calculator.html">Savings</a><a href="christmas-budget-calculator.html">Christmas</a></nav></div></header>
+<main class="wrap"><h1>Free invoice generator</h1><p class="lead noprint">Fill it in, then press <b>Save as PDF</b>. No account, no watermark, and your details stay on your device.</p>
+<div class="card" id="inv"><h2 class="printonly" style="font-size:34px;margin:0 0 10px">INVOICE</h2>
+<div class="row"><div><label>From (your name / business)</label><textarea id="from" rows="3">Your Name
+Street, City
+you@email.com</textarea></div><div><label>Bill to</label><textarea id="to" rows="3">Client Name
+Company
+client@email.com</textarea></div></div>
+<div class="row"><div><label>Invoice #</label><input id="num" value="INV-001"></div><div><label>Date</label><input id="date" type="date"></div><div><label>Due date</label><input id="due" type="date"></div><div><label>Currency</label><select id="cur"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option><option>RON</option><option>INR</option></select></div></div>
+<table style="margin-top:16px"><thead><tr><th style="width:55%">Description</th><th>Qty</th><th>Price</th><th>Amount</th><th class="noprint"></th></tr></thead><tbody id="items"></tbody></table>
+<button class="ghost noprint" style="margin-top:10px" onclick="addRow()">+ Add line</button>
+<div class="row" style="margin-top:12px"><div><label>Tax %</label><input id="tax" type="number" value="0" min="0" step="0.1"></div><div><label>Discount</label><input id="disc" type="number" value="0" min="0"></div></div>
+<div class="result"><div>Subtotal: <b id="sub"></b></div><div>Tax: <b id="taxv"></b></div><div>Discount: <b id="discv"></b></div><div class="big">Total: <span id="tot"></span></div></div>
+<label>Notes / payment details</label><textarea id="notes" rows="3">Thank you for your business! Payment by bank transfer within 14 days.</textarea>
+</div>
+<p class="noprint"><button onclick="window.print()">Save as PDF / Print</button> <button class="ghost" onclick="localStorage.removeItem('inv');location.reload()">Clear</button></p>
+<div class="card promo noprint"><b>Track every invoice and expense in one place</b><p>The Freelancer Finance Kit is a spreadsheet for invoices, income, expenses and tax set-asides.</p><a class="btn" href="https://rokeru.gumroad.com/l/ovrpjm">Get it for $12 →</a></div>
+<section class="faq noprint"><h2>Questions</h2><h3>Is this invoice generator really free?</h3><p>Yes. No sign-up, no watermark, no limits.</p><h3>Where is my data stored?</h3><p>Only in your own browser, so the form is still filled in when you come back. Nothing is uploaded.</p><h3>How do I get a PDF?</h3><p>Press "Save as PDF / Print" and pick "Save as PDF" as the printer.</p></section></main>
+<footer><div class="wrap">Free, private calculators: everything runs in your browser and nothing you type is sent anywhere. Not financial advice.<br>Made by <a href="/">Rokeru</a> · <a href="/">☕ Buy me a coffee</a> · printable planners and spreadsheets at <a href="https://rokeru.gumroad.com">rokeru.gumroad.com</a></div></footer>
+<script>const $=s=>document.querySelector(s);const money=(n,c)=>(isFinite(n)?n:0).toLocaleString(undefined,{style:"currency",currency:c||"USD"});
+const items=$("#items");
+function addRow(d="",q=1,p=0){const tr=document.createElement("tr");tr.innerHTML=`<td><input value="${d}" placeholder="Service or product"></td><td><input type="number" value="${q}" min="0" step="any"></td><td><input type="number" value="${p}" min="0" step="any"></td><td class="amt"></td><td class="noprint"><button class="ghost" style="padding:4px 9px">×</button></td>`;tr.querySelector("button").onclick=()=>{tr.remove();calc()};items.appendChild(tr);calc()}
+function calc(){const c=$("#cur").value;let s=0;items.querySelectorAll("tr").forEach(tr=>{const i=tr.querySelectorAll("input");const a=(+i[1].value)*(+i[2].value);tr.querySelector(".amt").textContent=money(a,c);s+=a});const t=s*(+$("#tax").value)/100,d=+$("#disc").value;$("#sub").textContent=money(s,c);$("#taxv").textContent=money(t,c);$("#discv").textContent="-"+money(d,c);$("#tot").textContent=money(s+t-d,c);save()}
+function save(){try{const rows=[...items.querySelectorAll("tr")].map(tr=>[...tr.querySelectorAll("input")].map(i=>i.value));localStorage.setItem("inv",JSON.stringify({f:["from","to","num","date","due","cur","tax","disc","notes"].map(k=>$("#"+k).value),rows}))}catch(e){}}
+let st=null;try{st=JSON.parse(localStorage.getItem("inv"))}catch(e){}
+if(st){["from","to","num","date","due","cur","tax","disc","notes"].forEach((k,i)=>$("#"+k).value=st.f[i]);st.rows.forEach(r=>addRow(...r))}else{const d=new Date();$("#date").value=d.toISOString().slice(0,10);d.setDate(d.getDate()+14);$("#due").value=d.toISOString().slice(0,10);addRow("Design work",10,50)}
+document.addEventListener("input",calc);calc();</script></body></html>
