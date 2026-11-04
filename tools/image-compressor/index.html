@@ -3,101 +3,337 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free Image Compressor: Shrink JPG, PNG and WebP Photos Online</title>
-<meta name="description" content="Compress JPG, PNG and WebP images for free, right in your browser. Your photos never get uploaded. Batch compress, resize, and download. No sign-up, no watermark, no limits.">
+<title>Free Image Compressor: Shrink JPG, PNG, WebP and AVIF Photos</title>
+<meta name="description" content="Compress JPG, PNG, WebP and AVIF images for free, right in your browser. Batch compress, resize, hit a target file size and download as ZIP. Photos never leave your device. No sign-up, no watermark, no limits.">
+<link rel="canonical" href="https://chietruprogramatoru.github.io/tools/image-compressor/">
+<meta property="og:title" content="Free image compressor that never uploads your photos">
+<meta property="og:description" content="Batch compress JPG, PNG, WebP and AVIF in your browser. No limits, no sign-up.">
+<meta name="theme-color" content="#e0533d">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗜️</text></svg>">
 <link rel="stylesheet" href="../style.css">
-<style>
-.drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:32px 16px;text-align:center;cursor:pointer;background:var(--card)}
-.drop.over{border-color:var(--accent);background:var(--soft)}
-.drop input{display:none}
-.file{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.file img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:var(--line)}
-.file .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.save{color:var(--accent-2);font-weight:700}
-</style>
+<link rel="stylesheet" href="../lib/compress.css">
+<link rel="modulepreload" href="../lib/img-worker.js">
 </head>
 <body data-promo="none">
-<main>
-  <nav class="top"><a href="../">← All free tools</a></nav>
+<main class="wide">
+  <nav class="top"><a href="../">← All free tools</a><a href="../video-compressor/">🎬 Video compressor</a></nav>
   <h1>Free image compressor</h1>
-  <p class="lede">Shrink photos for email, websites and uploads. It runs entirely in your browser, so your images are never uploaded. Free with no limits, no watermark and no sign-up.</p>
-  <div class="card grid">
-    <div class="grid g3">
-      <div><label for="fmt">Output format</label><select id="fmt"><option value="image/jpeg">JPG (smallest for photos)</option><option value="image/webp">WebP (smaller, modern)</option><option value="keep">Same as original</option></select></div>
-      <div><label for="q">Quality: <span id="qv">75</span>%</label><input id="q" type="range" min="10" max="95" value="75" style="padding:0"></div>
-      <div><label for="mw">Max width (px)</label><select id="mw"><option value="0">Keep size</option><option value="3840">3840 (4K)</option><option value="2048" selected>2048</option><option value="1600">1600</option><option value="1080">1080</option><option value="800">800</option></select></div>
+  <p class="lede">Shrink photos for email, websites, listings and uploads. Batch hundreds at once, resize, or hit an exact file size. Free with no limits, no watermark and no sign-up.</p>
+  <p class="privacy">🔒 Your images never leave your device. Nothing is uploaded.</p>
+
+  <div class="card">
+    <label class="drop" id="drop">
+      <input id="pick" type="file" accept="image/*,.heic,.heif,.avif" multiple>
+      <span class="ico">📷</span><b>Choose images or drop them here</b>
+      <small>JPG, PNG, WebP, AVIF, GIF, BMP (HEIC in Safari). You can also paste with Ctrl+V.</small>
+    </label>
+    <div class="settings s4">
+      <div><label for="fmt">Format</label>
+        <select id="fmt">
+          <option value="auto">Same as original</option>
+          <option value="jpeg">JPG</option>
+          <option value="webp">WebP</option>
+          <option value="avif">AVIF (smallest)</option>
+          <option value="png">PNG</option>
+        </select>
+        <p class="hint" id="fmtHint"></p></div>
+      <div><label for="q">Quality: <span id="qv">75</span></label>
+        <input id="q" type="range" min="5" max="100" value="75">
+        <div class="chips" id="qChips"><button type="button" data-q="55">Smallest</button><button type="button" data-q="75">Balanced</button><button type="button" data-q="88">High</button></div></div>
+      <div><label for="edge">Resize (longest side)</label>
+        <select id="edge">
+          <option value="0">Keep original size</option>
+          <option value="3840">3840 px (4K)</option>
+          <option value="2560">2560 px</option>
+          <option value="1920">1920 px (Full HD)</option>
+          <option value="1600">1600 px</option>
+          <option value="1280">1280 px</option>
+          <option value="1080">1080 px (Instagram)</option>
+          <option value="800">800 px</option>
+          <option value="512">512 px</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <input id="edgeC" type="number" min="16" max="20000" placeholder="Pixels, e.g. 1500" hidden style="margin-top:8px"></div>
+      <div><label for="tgt">Max file size</label>
+        <select id="tgt">
+          <option value="0">No limit</option>
+          <option value="50">50 KB</option>
+          <option value="100">100 KB</option>
+          <option value="200">200 KB</option>
+          <option value="500">500 KB</option>
+          <option value="1024">1 MB</option>
+          <option value="2048">2 MB</option>
+          <option value="5120">5 MB</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <input id="tgtC" type="number" min="5" max="100000" placeholder="KB, e.g. 300" hidden style="margin-top:8px">
+        <p class="hint">Finds the best quality that fits.</p></div>
+      <details class="adv"><summary>More options</summary>
+        <div class="settings">
+          <div><label for="effort">Effort</label><select id="effort"><option value="fast">Fast (recommended)</option><option value="max">Maximum squeeze (slower)</option></select></div>
+          <div><label for="suffix">File name ending</label><input id="suffix" type="text" value="-min" maxlength="40" placeholder="Leave empty to keep the same name"></div>
+        </div>
+      </details>
     </div>
-    <label class="drop" id="drop"><input id="pick" type="file" accept="image/*" multiple>
-      <div style="font-size:2rem">📷</div><b>Choose images or drop them here</b><div class="muted">JPG, PNG, WebP, as many as you like</div></label>
   </div>
-  <div class="result" id="res" hidden>
-    <div id="list"></div>
-    <p id="sum" style="margin:12px 0"></p>
-    <button id="all" type="button">⬇️ Download all</button>
-  </div>
+
+  <section id="out" hidden>
+    <div class="toolbar">
+      <div class="summary" id="sum" aria-live="polite"></div>
+      <div class="btns">
+        <button id="zip" type="button">⬇️ Download all (ZIP)</button>
+        <button id="share" type="button" class="sec" hidden>📤 Save / share</button>
+        <button id="clear" type="button" class="sec">Clear</button>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="thanks" id="thanks" hidden></div>
+  </section>
+
   <section class="faq">
+    <h2>How it works</h2>
+    <p>Your browser decodes each image and re-encodes it with the same high-quality encoders used by Google's Squoosh app (MozJPEG, libwebp, libavif and OxiPNG), compiled to run on your own device. Several images are processed at once on separate CPU cores. Location data and other hidden metadata (EXIF) are removed, which also protects your privacy.</p>
     <h2>FAQ</h2>
-    <b>Is it really free?</b><p>Yes. There's no paid tier and no download limit. The compressing happens on your own device, so it costs nothing to run. If it helped, a coffee tip below is appreciated but never required.</p>
-    <b>Are my photos private?</b><p>They never leave your device. Nothing is uploaded to any server.</p>
-    <b>Why is a PNG still big?</b><p>PNG is lossless. Switch the format to JPG or WebP for much smaller photos. Keep PNG for screenshots or images that need transparency.</p>
+    <b>Is it really free?</b><p>Yes. There's no paid tier, no daily limit, no watermark and no account. The work happens on your own device, so it costs nothing to run. If it helps you, a coffee tip is appreciated but never required.</p>
+    <b>Are my photos private?</b><p>They never leave your device. You can even turn off Wi-Fi after the page loads and it still works.</p>
+    <b>Which format should I pick?</b><p>Keep "Same as original" if you're not sure. JPG works everywhere. WebP is about 25 to 35% smaller and great for websites. AVIF is smaller still but a bit slower to make. PNG keeps transparency; with quality below 100 it reduces colors (like TinyPNG) for much smaller files.</p>
+    <b>How do I get a photo under a size limit (like 200 KB for a form)?</b><p>Set "Max file size". The tool tries quality levels until it finds the best one that fits, and shrinks the dimensions only if it has to.</p>
+    <b>Why did a file say "kept original"?</b><p>It was already well compressed. Rather than hand you a bigger file, the tool keeps your original.</p>
+    <b>Can I install it?</b><p>Yes. In Chrome or Edge use "Install app" in the menu; on iPhone use Share → Add to Home Screen. It then works offline.</p>
   </section>
 </main>
-<script>
-(function(){
-  var $=function(i){return document.getElementById(i)};
-  var results=[];
-  function kb(b){return b>1048576?(b/1048576).toFixed(2)+" MB":Math.max(1,Math.round(b/1024))+" KB"}
-  $("q").oninput=function(){$("qv").textContent=this.value};
-  function compress(file){
-    return new Promise(function(ok,bad){
-      var url=URL.createObjectURL(file),img=new Image();
-      img.onload=function(){
-        var mw=+$("mw").value,w=img.naturalWidth,h=img.naturalHeight;
-        if(mw&&w>mw){h=Math.round(h*mw/w);w=mw}
-        var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d");
-        var fmt=$("fmt").value;if(fmt==="keep")fmt=/png|webp|jpeg/.test(file.type)?file.type:"image/jpeg";
-        if(fmt==="image/jpeg"){x.fillStyle="#fff";x.fillRect(0,0,w,h)}
-        x.drawImage(img,0,0,w,h);URL.revokeObjectURL(url);
-        c.toBlob(function(b){
-          if(!b)return bad(new Error("Your browser can't make "+fmt));
-          if(b.size>=file.size&&fmt===file.type&&w===img.naturalWidth)b=file; // never make it bigger
-          ok({blob:b,w:w,h:h});
-        },fmt,+$("q").value/100);
-      };
-      img.onerror=function(){URL.revokeObjectURL(url);bad(new Error("Couldn't read this image"))};
-      img.src=url;
-    });
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-label="Compare before and after">
+  <div class="bar2"><span id="mInfo"></span><span style="display:flex;gap:8px"><button type="button" id="mZoom">1:1 zoom</button><button type="button" id="mClose">Close ✕</button></span></div>
+  <div class="cmp" id="cmp"><img id="mA" alt="Original"><img id="mB" class="after" alt="Compressed"><div class="line"></div><span class="lab l">Original</span><span class="lab r">Compressed</span></div>
+  <p class="kbd" style="color:#ccc;text-align:center;margin:8px 0 0">Drag to compare. Press Esc to close.</p>
+</div>
+
+<script type="module">
+import { makeZip } from '../lib/zip.js';
+const $ = (id) => document.getElementById(id);
+const TIP = 'https://chietruprogramatoru.github.io/';
+const fmtSize = (b) => b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif' };
+const HINTS = { auto: 'Each image stays in its own format.', jpeg: 'Works everywhere. Transparent areas become white.', webp: 'Smaller than JPG. Great for websites.', avif: 'Best compression; a little slower.', png: 'Keeps transparency. Below 100 it reduces colors.' };
+
+// ---------- settings (remembered on this device only) ----------
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)) } catch (e) { return null } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) {} } };
+const saved = store.get('imgc-settings') || {};
+for (const id of ['fmt', 'q', 'edge', 'edgeC', 'tgt', 'tgtC', 'effort', 'suffix']) if (saved[id] != null) $(id).value = saved[id];
+function opts() {
+  const edge = $('edge').value === 'custom' ? (+$('edgeC').value || 0) : +$('edge').value;
+  const tgt = $('tgt').value === 'custom' ? (+$('tgtC').value || 0) : +$('tgt').value;
+  return { format: $('fmt').value, quality: +$('q').value, maxW: edge, maxH: edge, targetKB: tgt, effort: $('effort').value };
+}
+function syncUI() {
+  $('qv').textContent = $('q').value + ($('fmt').value === 'png' && +$('q').value >= 100 ? ' (lossless)' : '');
+  $('edgeC').hidden = $('edge').value !== 'custom';
+  $('tgtC').hidden = $('tgt').value !== 'custom';
+  $('fmtHint').textContent = HINTS[$('fmt').value];
+  for (const b of $('qChips').children) b.setAttribute('aria-pressed', String(b.dataset.q === $('q').value));
+  const s = {}; for (const id of ['fmt', 'q', 'edge', 'edgeC', 'tgt', 'tgtC', 'effort', 'suffix']) s[id] = $(id).value; store.set('imgc-settings', s);
+}
+syncUI();
+
+// ---------- worker pool ----------
+const cores = navigator.hardwareConcurrency || 4;
+const mobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const POOL = Math.max(1, Math.min(mobile ? 2 : 4, cores - 1));
+let workers = [], useWorkers = typeof OffscreenCanvas !== 'undefined' && typeof Worker !== 'undefined';
+let jobId = 0; const pending = new Map(); const idle = []; const queue = [];
+function makeWorker() {
+  const w = new Worker(new URL('../lib/img-worker.js', import.meta.url), { type: 'module' });
+  w.onmessage = (e) => {
+    if (e.data.ready) return;
+    const p = pending.get(e.data.id); pending.delete(e.data.id);
+    idle.push(w); pump();
+    p && p.resolve(e.data);
+  };
+  w.onerror = (e) => { e.preventDefault && e.preventDefault(); for (const [id, p] of pending) if (p.w === w) { pending.delete(id); p.resolve({ ok: false, error: 'crash' }); } replaceWorker(w); };
+  return w;
+}
+function replaceWorker(w) { try { w.terminate() } catch (e) {} workers = workers.filter(x => x !== w); const i = idle.indexOf(w); if (i >= 0) idle.splice(i, 1); const n = makeWorker(); workers.push(n); idle.push(n); pump(); }
+function pump() {
+  while (idle.length && queue.length) {
+    const job = queue.shift(); if (job.cancelled()) { job.resolve(null); continue; }
+    const w = idle.shift(); const id = ++jobId;
+    pending.set(id, { resolve: job.resolve, w });
+    const msg = { id, file: job.file, bitmap: job.bitmap || null, opts: job.opts };
+    w.postMessage(msg, job.bitmap ? [job.bitmap] : []);
   }
-  function ext(t){return t==="image/png"?"png":t==="image/webp"?"webp":"jpg"}
-  async function handle(files){
-    files=[].filter.call(files,function(f){return /^image\//.test(f.type)});if(!files.length)return;
-    $("res").hidden=false;
-    for(const f of files){
-      var row=document.createElement("div");row.className="file";
-      row.innerHTML='<img alt=""><div><div class="nm"></div><div class="muted">Compressing…</div></div><span></span>';
-      row.querySelector(".nm").textContent=f.name;$("list").appendChild(row);
-      try{
-        var r=await compress(f),u=URL.createObjectURL(r.blob);
-        var name=f.name.replace(/\.[^.]+$/,"")+"-compressed."+ext(r.blob.type);
-        row.querySelector("img").src=u;
-        var pct=Math.round((1-r.blob.size/f.size)*100);
-        row.children[1].children[1].innerHTML=kb(f.size)+" → "+kb(r.blob.size)+' <span class="save">'+(pct>0?"−"+pct+"%":"already small")+"</span> · "+r.w+"×"+r.h;
-        var a=document.createElement("a");a.className="btn";a.href=u;a.download=name;a.textContent="⬇️";a.setAttribute("aria-label","Download "+name);row.children[2].appendChild(a);
-        results.push({a:a,before:f.size,after:r.blob.size});
-      }catch(e){row.children[1].children[1].textContent=e.message}
+}
+function runJob(file, o, cancelled, bitmap) {
+  if (!workers.length) for (let i = 0; i < POOL; i++) { const w = makeWorker(); workers.push(w); idle.push(w); }
+  return new Promise((resolve) => { queue.push({ file, opts: o, cancelled, resolve, bitmap }); pump(); });
+}
+// Main-thread decode for formats only the page can open (e.g. HEIC in Safari).
+async function decodeOnPage(file) {
+  const url = URL.createObjectURL(file);
+  try { const img = new Image(); img.src = url; await img.decode(); return await createImageBitmap(img); } finally { URL.revokeObjectURL(url); }
+}
+// Fallback for very old browsers without OffscreenCanvas: canvas encoder.
+async function fallbackCompress(file, o) {
+  const bmp = await decodeOnPage(file);
+  let w = bmp.width, h = bmp.height; const k = Math.min(1, o.maxW ? o.maxW / Math.max(w, h) : 1);
+  w = Math.round(w * k); h = Math.round(h * k);
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+  let type = o.format === 'auto' ? (EXT[file.type] ? file.type : 'image/jpeg') : 'image/' + o.format;
+  if (type === 'image/avif') type = 'image/webp';
+  if (type === 'image/jpeg') { x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); }
+  x.drawImage(bmp, 0, 0, w, h);
+  let q = o.quality / 100, blob;
+  for (let i = 0; i < 8; i++) { blob = await new Promise(r => c.toBlob(r, type, q)); if (!o.targetKB || blob.size <= o.targetKB * 1024 || q < 0.1) break; q -= 0.1; }
+  return { ok: true, buf: await blob.arrayBuffer(), type: blob.type, w, h, sw: bmp.width, sh: bmp.height, q: Math.round(q * 100), kept: false };
+}
+
+// ---------- items ----------
+let items = [], gen = 0, zipping = false;
+const fileOk = (f) => /^image\//.test(f.type) || /\.(heic|heif|avif|jxl)$/i.test(f.name);
+function addFiles(list) {
+  const files = [...list].filter(fileOk);
+  if (!files.length) return;
+  $('out').hidden = false;
+  for (const f of files) {
+    const it = { file: f, src: URL.createObjectURL(f), out: null, url: null, state: 'queued', gen };
+    it.el = document.createElement('div'); it.el.className = 'item';
+    it.el.innerHTML = '<button class="thumb" type="button" aria-label="Compare before and after"><img class="thumb" alt=""></button><div style="min-width:0"><div class="nm"></div><div class="meta"></div><div class="bar busy"><i></i></div></div><div class="acts"><a class="btn dl" aria-disabled="true" title="Download">⬇️</a><button type="button" class="sec rm" title="Remove" aria-label="Remove">✕</button></div>';
+    it.el.querySelector('.nm').textContent = f.name;
+    it.el.querySelector('.nm').title = f.name;
+    it.el.querySelector('img').src = it.src;
+    it.el.querySelector('button.thumb').onclick = () => openCompare(it);
+    it.el.querySelector('.rm').onclick = () => removeItem(it);
+    it.el.querySelector('.dl').onclick = (e) => { if (!it.url) e.preventDefault(); };
+    $('list').appendChild(it.el);
+    items.push(it);
+    process(it);
+  }
+  updateSummary();
+}
+function outName(it) {
+  const base = it.file.name.replace(/\.[^.]+$/, ''), sfx = $('suffix').value.replace(/[\\/:*?"<>|]/g, '');
+  return base + sfx + '.' + (EXT[it.out.type] || 'jpg');
+}
+async function process(it) {
+  const myGen = gen, o = opts();
+  it.state = 'working'; it.gen = myGen; setMeta(it, 'Compressing…'); it.el.querySelector('.bar').hidden = false;
+  const cancelled = () => myGen !== gen || !items.includes(it);
+  let r;
+  try {
+    if (!useWorkers) r = await fallbackCompress(it.file, o);
+    else {
+      r = await runJob(it.file, o, cancelled);
+      if (r && !r.ok && r.decode) { // the worker couldn't open it; let the page try (HEIC in Safari etc.)
+        try { const bmp = await decodeOnPage(it.file); r = await runJob(it.file, o, cancelled, bmp); } catch (e) {}
+      }
+      if (r && !r.ok && r.error === 'crash') { // out of memory on huge images: try the simple encoder
+        try { r = await fallbackCompress(it.file, o); } catch (e) {}
+      }
     }
-    var b=results.reduce(function(s,r){return s+r.before},0),a2=results.reduce(function(s,r){return s+r.after},0);
-    $("sum").innerHTML="<b>"+results.length+"</b> images: "+kb(b)+" → "+kb(a2)+' <span class="save">(saved '+kb(Math.max(0,b-a2))+")</span>";
+  } catch (e) { r = { ok: false, error: e.message } }
+  if (!r || cancelled()) return;
+  it.el.querySelector('.bar').hidden = true;
+  if (!r.ok) {
+    it.state = 'error'; it.el.classList.add('err');
+    const heic = /\.(heic|heif)$/i.test(it.file.name) || /heic|heif/.test(it.file.type);
+    setMeta(it, heic ? "This browser can't open HEIC photos. Try Safari, or on iPhone set Settings → Camera → Formats → Most Compatible." : "Couldn't read this image (" + r.error + ').');
+    updateSummary(); return;
   }
-  $("all").onclick=function(){results.forEach(function(r,i){setTimeout(function(){r.a.click()},i*300)})};
-  $("pick").onchange=function(){handle(this.files);this.value=""};
-  var d=$("drop");
-  ["dragenter","dragover"].forEach(function(e){d.addEventListener(e,function(ev){ev.preventDefault();d.classList.add("over")})});
-  ["dragleave","drop"].forEach(function(e){d.addEventListener(e,function(ev){ev.preventDefault();d.classList.remove("over")})});
-  d.addEventListener("drop",function(ev){handle(ev.dataTransfer.files)});
-  document.addEventListener("paste",function(ev){if(ev.clipboardData&&ev.clipboardData.files.length)handle(ev.clipboardData.files)});
-})();
+  it.el.classList.remove('err');
+  it.out = new Blob([r.buf], { type: r.type }); it.r = r;
+  if (it.url) URL.revokeObjectURL(it.url);
+  it.url = URL.createObjectURL(it.out);
+  const a = it.el.querySelector('.dl'); a.href = it.url; a.download = outName(it); a.removeAttribute('aria-disabled'); a.setAttribute('aria-label', 'Download ' + a.download);
+  const pct = Math.round((1 - it.out.size / it.file.size) * 100);
+  const tag = r.kept ? '<span class="save">kept original</span>' : pct > 0 ? '<span class="save">−' + pct + '%</span>' : '<span class="grow">+' + (-pct) + '%</span>';
+  const dims = (r.w !== r.sw ? r.sw + '×' + r.sh + ' → ' : '') + r.w + '×' + r.h;
+  const over = o.targetKB && it.out.size > o.targetKB * 1024 ? ' · <span class="grow">couldn\'t reach ' + fmtSize(o.targetKB * 1024) + '</span>' : '';
+  setMeta(it, fmtSize(it.file.size) + ' → <b>' + fmtSize(it.out.size) + '</b> ' + tag + ' · ' + (EXT[r.type] || '').toUpperCase() + ' · ' + dims + (o.targetKB && !r.kept ? ' · q' + r.q : '') + over, true);
+  it.state = 'done';
+  updateSummary();
+}
+function setMeta(it, s, html) { const m = it.el.querySelector('.meta'); if (html) m.innerHTML = s; else m.textContent = s; }
+function removeItem(it) {
+  items = items.filter(x => x !== it); it.el.remove();
+  URL.revokeObjectURL(it.src); if (it.url) URL.revokeObjectURL(it.url);
+  if (!items.length) $('out').hidden = true;
+  updateSummary();
+}
+function updateSummary() {
+  const done = items.filter(i => i.state === 'done'), working = items.filter(i => i.state === 'working').length;
+  const before = done.reduce((s, i) => s + i.file.size, 0), after = done.reduce((s, i) => s + i.out.size, 0);
+  let s = working ? 'Compressing ' + (done.length + 1) + ' of ' + items.filter(i => i.state !== 'error').length + '…' : done.length + (done.length === 1 ? ' image' : ' images') + ' ready';
+  if (done.length) s += ' · ' + fmtSize(before) + ' → ' + fmtSize(after) + (before > after ? ' <span class="save">saved ' + Math.round((1 - after / before) * 100) + '%</span>' : '');
+  $('sum').innerHTML = s;
+  $('zip').disabled = !done.length || working > 0 || zipping;
+  $('zip').textContent = done.length > 1 ? '⬇️ Download all (ZIP)' : '⬇️ Download';
+  const canShare = !!(navigator.canShare && done.length && navigator.canShare({ files: [new File([done[0].out], 'x.' + (EXT[done[0].out.type] || 'jpg'), { type: done[0].out.type })] }));
+  $('share').hidden = !(canShare && mobile);
+  $('share').disabled = working > 0;
+  if (!working && done.length && before - after > 0) {
+    $('thanks').hidden = false;
+    $('thanks').innerHTML = '🎉 You saved <b>' + fmtSize(before - after) + '</b>. This tool is free and always will be. If it saved you time, <a href="' + TIP + '" target="_blank" rel="noopener">buy me a coffee ☕</a>.';
+  } else $('thanks').hidden = true;
+}
+function rerun() {
+  gen++;
+  for (const it of items) { it.el.classList.remove("err"); process(it); }
+  updateSummary();
+}
+let t = null;
+function onSetting() { syncUI(); clearTimeout(t); if (items.length) t = setTimeout(rerun, 350); }
+for (const id of ['fmt', 'edge', 'tgt', 'effort']) $(id).addEventListener('change', onSetting);
+for (const id of ['edgeC', 'tgtC']) $(id).addEventListener('input', onSetting);
+$('q').addEventListener('input', () => syncUI());
+$('q').addEventListener('change', onSetting);
+$('suffix').addEventListener('input', () => { syncUI(); for (const it of items) if (it.out) it.el.querySelector('.dl').download = outName(it); });
+$('qChips').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; $('q').value = b.dataset.q; onSetting(); });
+
+// ---------- download / share ----------
+function save(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); }
+$('zip').onclick = async () => {
+  const done = items.filter(i => i.state === 'done');
+  if (done.length === 1) return save(done[0].out, outName(done[0]));
+  zipping = true; updateSummary(); $('zip').textContent = 'Packing ZIP…';
+  try { save(await makeZip(done.map(i => ({ name: outName(i), blob: i.out }))), 'compressed-images.zip'); }
+  finally { zipping = false; updateSummary(); }
+};
+$('share').onclick = async () => {
+  const files = items.filter(i => i.state === 'done').map(i => new File([i.out], outName(i), { type: i.out.type }));
+  try { await navigator.share({ files }); } catch (e) { if (e.name !== 'AbortError') $('zip').click(); }
+};
+$('clear').onclick = () => { gen++; for (const it of [...items]) removeItem(it); };
+
+// ---------- input ----------
+$('pick').onchange = function () { addFiles(this.files); this.value = ''; };
+const d = $('drop');
+['dragenter', 'dragover'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.add('over'); }));
+['dragleave', 'drop'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.remove('over'); }));
+d.addEventListener('drop', ev => addFiles(ev.dataTransfer.files));
+// Dropping anywhere on the page also works.
+window.addEventListener('dragover', ev => ev.preventDefault());
+window.addEventListener('drop', ev => { if (!d.contains(ev.target)) { ev.preventDefault(); addFiles(ev.dataTransfer.files); } });
+document.addEventListener('paste', ev => { if (ev.clipboardData && ev.clipboardData.files.length) addFiles(ev.clipboardData.files); });
+
+// ---------- compare modal ----------
+let zoom = false;
+function openCompare(it) {
+  if (!it.url) return;
+  $('mA').src = it.src; $('mB').src = it.url;
+  $('mInfo').textContent = it.file.name + ' · ' + fmtSize(it.file.size) + ' → ' + fmtSize(it.out.size);
+  $('cmp').style.setProperty('--x', '50%'); $('modal').hidden = false; $('mClose').focus();
+}
+function closeCompare() { $('modal').hidden = true; zoom = false; $('cmp').classList.remove('zoom'); }
+$('mClose').onclick = closeCompare;
+$('mZoom').onclick = () => { zoom = !zoom; $('cmp').classList.toggle('zoom', zoom); $('mZoom').textContent = zoom ? 'Fit to screen' : '1:1 zoom'; };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeCompare(); });
+const cmp = $('cmp');
+function slide(e) { const r = cmp.getBoundingClientRect(); const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); cmp.style.setProperty('--x', (x * 100) + '%'); }
+cmp.addEventListener('pointerdown', e => { cmp.setPointerCapture(e.pointerId); slide(e); });
+cmp.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'mouse') slide(e); });
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
 </script>
 <script src="../site.js"></script>
 </body>

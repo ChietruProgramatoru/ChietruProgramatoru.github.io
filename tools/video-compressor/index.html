@@ -3,101 +3,390 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free Video Compressor: Make Videos Smaller in Your Browser</title>
-<meta name="description" content="Compress videos for free in your browser to share on Discord, WhatsApp or email. Nothing is uploaded. Pick a target size or quality. No sign-up, no watermark.">
+<title>Free Video Compressor: Shrink MP4 and MOV Fast, No Upload</title>
+<meta name="description" content="Compress videos for free in your browser, fast. Get under 10 MB for Discord, 16 MB for WhatsApp or 25 MB for email, or pick a quality. Trim, resize, batch. Nothing is uploaded. No sign-up, no watermark, no limits.">
+<link rel="canonical" href="https://chietruprogramatoru.github.io/tools/video-compressor/">
+<meta property="og:title" content="Free video compressor that never uploads your videos">
+<meta property="og:description" content="Fast, private video compression in your browser. Hit a target size for Discord, WhatsApp or email.">
+<meta name="theme-color" content="#e0533d">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
 <link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../lib/compress.css">
+<link rel="modulepreload" href="../lib/mediabunny.min.mjs">
 <style>
-.drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:32px 16px;text-align:center;cursor:pointer;background:var(--card)}
-.drop.over{border-color:var(--accent);background:var(--soft)}
-.drop input{display:none}
-video{width:100%;border-radius:12px;background:#000;max-height:360px}
-progress{width:100%;height:14px;accent-color:var(--accent-2)}
-.save{color:var(--accent-2);font-weight:700}
+.vitem{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
+.vitem .head{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center}
+.vitem .poster{width:96px;height:64px;border-radius:10px;background:#000;object-fit:cover}
+.vitem .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.vitem .meta{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.vitem .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.vitem .acts>*{min-height:40px;padding:8px 12px;font-size:.92rem}
+.vitem video{width:100%;max-height:420px;border-radius:10px;background:#000}
+.vitem .bar{height:8px;margin:0}
+.vitem.err{border-color:var(--accent)}
+.trim{display:grid;gap:10px;padding:12px;border-radius:12px;background:var(--soft)}
+.trim .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.trim .row2>div{display:grid;gap:6px}
+.trim input{min-height:40px}
+.trim .sec{min-height:36px;padding:6px 10px;font-size:.85rem}
+@media (max-width:520px){.vitem .head{grid-template-columns:72px minmax(0,1fr)}.vitem .poster{width:72px;height:52px}.vitem .acts{grid-column:1/-1}}
 </style>
 </head>
 <body data-promo="none">
-<main>
-  <nav class="top"><a href="../">← All free tools</a></nav>
+<main class="wide">
+  <nav class="top"><a href="../">← All free tools</a><a href="../image-compressor/">🗜️ Image compressor</a></nav>
   <h1>Free video compressor</h1>
-  <p class="lede">Make a video small enough for Discord, WhatsApp or email. It runs in your browser, so your video is never uploaded. Free, no watermark, no sign-up.</p>
-  <div class="card grid">
-    <div class="grid g2">
-      <div><label for="target">Aim for</label><select id="target">
-        <option value="size:10">Under 10 MB (Discord)</option>
-        <option value="size:16">Under 16 MB (WhatsApp)</option>
-        <option value="size:25" selected>Under 25 MB (email)</option>
-        <option value="rate:2500">Good quality (2.5 Mbps)</option>
-        <option value="rate:1000">Small (1 Mbps)</option>
-      </select></div>
-      <div><label for="res">Max height</label><select id="res"><option value="1080">1080p</option><option value="720" selected>720p</option><option value="480">480p</option><option value="360">360p</option></select></div>
+  <p class="lede">Make videos small enough for Discord, WhatsApp, email or your website. Uses your device's hardware video encoder, so it's usually several times faster than real time. Free, no watermark, no sign-up, no limits.</p>
+  <p class="privacy">🔒 Your videos never leave your device. Nothing is uploaded.</p>
+
+  <div class="card">
+    <label class="drop" id="drop">
+      <input id="pick" type="file" accept="video/*,.mkv,.mov,.m4v" multiple>
+      <span class="ico">🎬</span><b>Choose videos or drop them here</b>
+      <small>MP4, MOV, WebM, MKV. Several at once is fine; they're done one after another.</small>
+    </label>
+    <div class="settings s4">
+      <div><label for="goal">Goal</label>
+        <select id="goal">
+          <optgroup label="Quality">
+            <option value="q:high">High quality</option>
+            <option value="q:medium" selected>Balanced (recommended)</option>
+            <option value="q:low">Small file</option>
+          </optgroup>
+          <optgroup label="Fit under a size">
+            <option value="s:10">Under 10 MB (Discord)</option>
+            <option value="s:16">Under 16 MB (WhatsApp)</option>
+            <option value="s:25">Under 25 MB (email)</option>
+            <option value="s:50">Under 50 MB</option>
+            <option value="s:100">Under 100 MB</option>
+            <option value="s:custom">Custom size…</option>
+          </optgroup>
+        </select>
+        <input id="goalC" type="number" min="1" max="100000" step="any" placeholder="MB, e.g. 8" hidden style="margin-top:8px"></div>
+      <div><label for="res">Resolution</label>
+        <select id="res">
+          <option value="0">Keep original</option>
+          <option value="2160">4K (2160p)</option>
+          <option value="1440">1440p</option>
+          <option value="1080" selected>1080p (Full HD)</option>
+          <option value="720">720p</option>
+          <option value="480">480p</option>
+          <option value="360">360p</option>
+        </select>
+        <p class="hint">Never upscales. Works for portrait videos too.</p></div>
+      <div><label for="fps">Frame rate</label>
+        <select id="fps"><option value="0">Keep original</option><option value="60">60 fps</option><option value="30">30 fps</option><option value="24">24 fps</option><option value="15">15 fps</option></select></div>
+      <div><label for="audio">Sound</label>
+        <select id="audio"><option value="keep">Keep</option><option value="low">Lower quality (smaller)</option><option value="off">Remove sound</option></select></div>
+      <details class="adv"><summary>More options</summary>
+        <div class="settings">
+          <div><label for="fmt">File type</label><select id="fmt"><option value="mp4">MP4 (plays everywhere)</option><option value="webm">WebM</option></select></div>
+          <div><label for="codec">Video codec</label><select id="codec"><option value="auto">Automatic (most compatible)</option><option value="avc">H.264</option><option value="hevc">H.265 / HEVC (smaller, Apple devices)</option><option value="av1">AV1 (smallest, newest)</option><option value="vp9">VP9</option></select>
+            <p class="hint" id="codecHint"></p></div>
+        </div>
+      </details>
     </div>
-    <label class="drop" id="drop"><input id="pick" type="file" accept="video/*">
-      <div style="font-size:2rem">🎬</div><b>Choose a video or drop it here</b><div class="muted">MP4, MOV, WebM</div></label>
-    <p class="muted" style="margin:0;font-size:.9rem">Heads-up: your browser re-records the video as it plays, so a 2-minute clip takes about 2 minutes. Keep this tab open and visible while it works.</p>
+    <p class="notice" id="support" hidden></p>
   </div>
-  <div class="result" id="work" hidden>
-    <video id="v" playsinline muted></video>
-    <p id="status" style="margin:10px 0 6px"></p>
-    <progress id="prog" max="1" value="0"></progress>
-    <p id="done" style="margin:12px 0 0"></p>
-  </div>
+
+  <section id="out" hidden>
+    <div class="toolbar">
+      <div class="summary" id="sum" aria-live="polite"></div>
+      <div class="btns">
+        <button id="redo" type="button" class="sec" hidden>↻ Re-compress with new settings</button>
+        <button id="zip" type="button" hidden>⬇️ Download all (ZIP)</button>
+        <button id="clear" type="button" class="sec">Clear</button>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="thanks" id="thanks" hidden></div>
+  </section>
+
   <section class="faq">
     <h2>FAQ</h2>
-    <b>Is it really free?</b><p>Yes. No paid tier, no download limit, no watermark. Your own device does the work, so it costs nothing to run. A coffee tip below is welcome but never required.</p>
-    <b>What format do I get?</b><p>MP4 in browsers that support it (recent Chrome, Edge and Safari), otherwise WebM. WebM plays in Chrome, Firefox, Discord and most phones.</p>
-    <b>Why didn't it hit my target size exactly?</b><p>Browser encoders aim for a bitrate, so the result can land a little above or below. If it's over, pick a smaller target or lower resolution and run it again.</p>
+    <b>Is it really free?</b><p>Yes. No paid tier, no file size cap, no watermark and no account. Your own device does the work, so it costs nothing to run. A coffee tip is welcome but never required.</p>
+    <b>Is it private?</b><p>Your video is read straight from your device and compressed there. Nothing is uploaded, and it keeps working if you go offline after the page loads.</p>
+    <b>How fast is it?</b><p>It uses the video encoder built into your computer or phone (the same one screen recorders use), so a minute of 1080p video usually takes well under a minute on a recent device. Keep the tab open until it finishes.</p>
+    <b>Which goal should I pick?</b><p>"Balanced" gives a much smaller file that still looks good. Use a size goal when an app has an upload limit: the tool works out the right bitrate from the video's length and, if the first try lands over the limit, automatically tries again a bit smaller.</p>
+    <b>Can I cut out part of the video?</b><p>Yes. Tap ✂️ Trim on a video, set the start and end, and it re-compresses just that part. Shorter clips also fit size limits at higher quality.</p>
+    <b>Which browsers work?</b><p>Recent Chrome, Edge, Safari (iPhone and Mac) and Firefox. If your browser is too old, the page tells you and uses a slower fallback.</p>
   </section>
 </main>
-<script>
-(function(){
-  var $=function(i){return document.getElementById(i)};
-  function mb(b){return (b/1048576).toFixed(1)+" MB"}
-  function pickMime(){
-    var c=["video/mp4;codecs=avc1.42E01F,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
-    for(var i=0;i<c.length;i++)if(window.MediaRecorder&&MediaRecorder.isTypeSupported(c[i]))return c[i];
-    return "";
+<script type="module">
+import { Input, BlobSource, ALL_FORMATS, Output, BufferTarget, Mp4OutputFormat, WebMOutputFormat, Conversion, Quality, getFirstEncodableVideoCodec, getFirstEncodableAudioCodec } from '../lib/mediabunny.min.mjs';
+import { makeZip } from '../lib/zip.js';
+const $ = (id) => document.getElementById(id);
+const TIP = 'https://chietruprogramatoru.github.io/';
+const mb = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+const tfmt = (s) => { s = Math.max(0, s); const m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + r.toFixed(1); };
+const tparse = (v) => { v = String(v).trim(); if (!v) return null; const p = v.split(':').map(Number); if (p.some(isNaN)) return null; return p.reduce((a, x) => a * 60 + x, 0); };
+const CODEC_NAME = { avc: 'H.264', hevc: 'H.265', vp9: 'VP9', av1: 'AV1', vp8: 'VP8' };
+const hasWebCodecs = typeof VideoEncoder !== 'undefined' && typeof VideoDecoder !== 'undefined';
+const mobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+
+// ---------- settings ----------
+const IDS = ['goal', 'goalC', 'res', 'fps', 'audio', 'fmt', 'codec'];
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)) } catch (e) { return null } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) {} } };
+const saved = store.get('vidc-settings') || {};
+for (const id of IDS) if (saved[id] != null) $(id).value = saved[id];
+function settings() {
+  const g = $('goal').value.split(':');
+  return { mode: g[0], quality: g[0] === 'q' ? g[1] : null, targetMB: g[0] === 's' ? (g[1] === 'custom' ? +$('goalC').value || 0 : +g[1]) : 0,
+    res: +$('res').value, fps: +$('fps').value, audio: $('audio').value, fmt: $('fmt').value, codec: $('codec').value };
+}
+let changedSinceRun = false;
+function syncUI() {
+  $('goalC').hidden = $('goal').value !== 's:custom';
+  const s = {}; for (const id of IDS) s[id] = $(id).value; store.set('vidc-settings', s);
+  if ($('fmt').value === 'webm' && ($('codec').value === 'avc' || $('codec').value === 'hevc')) $('codec').value = 'auto';
+  $('codecHint').textContent = { auto: 'H.264 for MP4, VP9 for WebM, whichever your device can encode.', avc: 'Plays on every device and app.', hevc: 'About 30% smaller than H.264. Some Windows PCs need a free extension to play it.', av1: 'Smallest files. Plays in modern browsers, Discord and Android; not on older iPhones.', vp9: 'Good for websites and Discord.' }[$('codec').value];
+}
+syncUI();
+for (const id of IDS) $(id).addEventListener(id === 'goalC' ? 'input' : 'change', () => { syncUI(); changedSinceRun = true; refresh(); });
+
+if (!hasWebCodecs) {
+  $('support').hidden = false;
+  $('support').textContent = "Your browser doesn't have the fast video encoder, so this uses a slower method that works in real time (a 2-minute video takes about 2 minutes) and keep this tab visible. For the fast version, update to the latest Chrome, Edge, Safari or Firefox.";
+}
+
+// ---------- queue ----------
+let items = [], running = null;
+const isVideo = (f) => /^video\//.test(f.type) || /\.(mkv|mov|m4v|mp4|webm)$/i.test(f.name);
+function addFiles(list) {
+  const files = [...list].filter(isVideo);
+  if (!files.length) return;
+  $('out').hidden = false;
+  for (const f of files) {
+    const it = { file: f, src: URL.createObjectURL(f), state: 'queued', trim: null, out: null };
+    const el = it.el = document.createElement('div'); el.className = 'vitem';
+    el.innerHTML = '<div class="head"><video class="poster" muted playsinline preload="metadata"></video><div style="min-width:0"><div class="nm"></div><div class="meta">Waiting…</div></div><div class="acts"><button type="button" class="sec trimb">✂️ Trim</button><button type="button" class="sec cancel" hidden>Cancel</button><a class="btn dl" hidden>⬇️ Download</a><button type="button" class="sec share" hidden>📤 Share</button><button type="button" class="sec rm" aria-label="Remove">✕</button></div></div><div class="bar" hidden><i style="width:0"></i></div><div class="trimbox" hidden></div><video class="result" controls playsinline hidden></video>';
+    el.querySelector('.nm').textContent = f.name; el.querySelector('.nm').title = f.name;
+    el.querySelector('.poster').src = it.src + '#t=0.5';
+    el.querySelector('.rm').onclick = () => removeItem(it);
+    el.querySelector('.cancel').onclick = () => { it.cancelled = true; it.conv && it.conv.cancel(); it.legacyStop && it.legacyStop(); };
+    el.querySelector('.trimb').onclick = () => toggleTrim(it);
+    el.querySelector('.share').onclick = async () => { try { await navigator.share({ files: [new File([it.out], it.name, { type: it.out.type })] }); } catch (e) {} };
+    $('list').appendChild(el);
+    items.push(it);
   }
-  var busy=false;
-  async function run(file){
-    if(busy)return;
-    if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){$("work").hidden=false;$("status").textContent="Sorry, this browser can't compress video. Try Chrome, Edge or Firefox on a computer.";return}
-    busy=true;$("work").hidden=false;$("done").innerHTML="";$("prog").value=0;
-    var v=$("v"),url=URL.createObjectURL(file);v.src=url;v.muted=false;
-    $("status").textContent="Loading video…";
-    await new Promise(function(r,j){v.onloadedmetadata=r;v.onerror=function(){j(new Error("Your browser can't open this video file."))}}).catch(function(e){$("status").textContent=e.message;busy=false;throw e});
-    var dur=v.duration,maxH=+$("res").value,h=Math.min(v.videoHeight,maxH),w=Math.round(v.videoWidth*h/v.videoHeight/2)*2;h=Math.round(h/2)*2;
-    var t=$("target").value.split(":"),vbps;
-    if(t[0]==="size"){var bits=+t[1]*8*1048576*0.92;vbps=Math.max(150000,Math.min(8000000,bits/dur-96000))}else vbps=+t[1]*1000;
-    var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d");
-    var stream=c.captureStream(30);
-    // Route audio through Web Audio into the recording only, so it isn't played out loud.
-    try{
-      if(!v._ac){v._ac=new (window.AudioContext||window.webkitAudioContext)();v._dst=v._ac.createMediaStreamDestination();v._ac.createMediaElementSource(v).connect(v._dst)}
-      await v._ac.resume();v._dst.stream.getAudioTracks().forEach(function(a){stream.addTrack(a)});
-    }catch(e){}
-    var mime=pickMime(),rec=new MediaRecorder(stream,{mimeType:mime||undefined,videoBitsPerSecond:Math.round(vbps),audioBitsPerSecond:96000}),chunks=[];
-    rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data)};
-    var stopped=new Promise(function(r){rec.onstop=r});
-    var draw=function(){if(v.ended||v.paused&&v.currentTime>0)return;x.drawImage(v,0,0,w,h);$("prog").value=v.currentTime/dur;$("status").textContent="Compressing… "+Math.round(v.currentTime/dur*100)+"% ("+Math.round(dur-v.currentTime)+"s left)";requestAnimationFrame(draw)};
-    v.currentTime=0;rec.start(1000);
-    try{await v.play()}catch(e){v.muted=true;await v.play()}
-    draw();
-    await new Promise(function(r){v.onended=r});
-    rec.stop();await stopped;
-    var type=(mime||"video/webm").split(";")[0],out=new Blob(chunks,{type:type}),u=URL.createObjectURL(out);
-    var name=file.name.replace(/\.[^.]+$/,"")+"-compressed."+(type==="video/mp4"?"mp4":"webm");
-    $("prog").value=1;$("status").innerHTML="Done: "+mb(file.size)+" → "+mb(out.size)+' <span class="save">'+(out.size<file.size?"−"+Math.round((1-out.size/file.size)*100)+"%":"")+"</span> · "+w+"×"+h;
-    if(out.size>=file.size)$("status").innerHTML+="<br>The original was already well compressed. Try a smaller target or resolution.";
-    var a=document.createElement("a");a.className="btn";a.href=u;a.download=name;a.textContent="⬇️ Download "+name;$("done").appendChild(a);
-    v.pause();v.removeAttribute("src");v.load();URL.revokeObjectURL(url);busy=false;
+  refresh(); next();
+}
+function setMeta(it, html) { it.el.querySelector('.meta').innerHTML = html; }
+function setBar(it, p) { const b = it.el.querySelector('.bar'); b.hidden = p == null; if (p != null) b.firstChild.style.width = (p * 100).toFixed(1) + '%'; }
+function removeItem(it) {
+  if (it === running) { it.cancelled = true; it.conv && it.conv.cancel(); it.legacyStop && it.legacyStop(); }
+  items = items.filter(x => x !== it); it.el.remove(); URL.revokeObjectURL(it.src); if (it.url) URL.revokeObjectURL(it.url);
+  if (!items.length) $('out').hidden = true;
+  refresh();
+}
+function refresh() {
+  const done = items.filter(i => i.state === 'done'), left = items.filter(i => i.state === 'queued' || i.state === 'working').length;
+  const before = done.reduce((s, i) => s + i.file.size, 0), after = done.reduce((s, i) => s + i.out.size, 0);
+  let s = left ? 'Compressing ' + (items.length - left + 1) + ' of ' + items.length + '…' : done.length + (done.length === 1 ? ' video' : ' videos') + ' ready';
+  if (done.length) s += ' · ' + mb(before) + ' → ' + mb(after) + (before > after ? ' <span class="save">saved ' + Math.round((1 - after / before) * 100) + '%</span>' : '');
+  $('sum').innerHTML = s;
+  $('zip').hidden = done.length < 2; $('zip').disabled = left > 0;
+  $('redo').hidden = !(changedSinceRun && done.length && !left);
+  if (!left && done.length && before > after) { $('thanks').hidden = false; $('thanks').innerHTML = '🎉 You saved <b>' + mb(before - after) + '</b>. This tool is free and always will be. If it saved you time, <a href="' + TIP + '" target="_blank" rel="noopener">buy me a coffee ☕</a>.'; }
+  else $('thanks').hidden = true;
+}
+let wake = null;
+async function next() {
+  if (running) return;
+  const it = items.find(i => i.state === 'queued');
+  if (!it) { if (wake) { wake.release().catch(() => {}); wake = null; } return; }
+  running = it;
+  try { if (!wake && navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+  await compress(it);
+  running = null; refresh(); next();
+}
+document.addEventListener('visibilitychange', async () => { if (running && document.visibilityState === 'visible' && navigator.wakeLock && (!wake || wake.released)) { try { wake = await navigator.wakeLock.request('screen'); } catch (e) {} } });
+
+// ---------- trim ----------
+function toggleTrim(it) {
+  const box = it.el.querySelector('.trimbox');
+  if (!box.hidden) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = '<div class="trim"><video controls playsinline preload="metadata"></video><div class="row2"><div><label>Start (m:ss)</label><input class="ts" inputmode="decimal" placeholder="0:00"><button type="button" class="sec setS">Use current time</button></div><div><label>End (m:ss)</label><input class="te" inputmode="decimal" placeholder="end"><button type="button" class="sec setE">Use current time</button></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="apply">✂️ Trim and compress</button><button type="button" class="sec reset">Use whole video</button></div></div>';
+  const v = box.querySelector('video'); v.src = it.src;
+  if (it.trim) { box.querySelector('.ts').value = tfmt(it.trim.start); box.querySelector('.te').value = it.trim.end != null ? tfmt(it.trim.end) : ''; }
+  box.querySelector('.setS').onclick = () => { box.querySelector('.ts').value = tfmt(v.currentTime); };
+  box.querySelector('.setE').onclick = () => { box.querySelector('.te').value = tfmt(v.currentTime); };
+  box.querySelector('.reset').onclick = () => { it.trim = null; box.hidden = true; box.innerHTML = ''; requeue(it); };
+  box.querySelector('.apply').onclick = () => {
+    const s = tparse(box.querySelector('.ts').value) || 0, e = tparse(box.querySelector('.te').value);
+    if (e != null && e <= s) { alert('The end needs to be after the start.'); return; }
+    it.trim = { start: s, end: e }; box.hidden = true; box.innerHTML = ''; requeue(it);
+  };
+}
+function requeue(it) {
+  if (it === running) { it.cancelled = true; it.requeue = true; it.conv && it.conv.cancel(); it.legacyStop && it.legacyStop(); return; }
+  it.state = 'queued'; it.el.classList.remove('err'); setMeta(it, 'Waiting…'); refresh(); next();
+}
+$('redo').onclick = () => { changedSinceRun = false; for (const it of items) if (it.state !== 'working') { it.state = 'queued'; setMeta(it, 'Waiting…'); } refresh(); next(); };
+
+// ---------- the actual compression ----------
+const even = (n) => Math.max(2, Math.round(n / 2) * 2);
+async function compress(it) {
+  const s = settings(); changedSinceRun = false;
+  it.state = 'working'; it.cancelled = false; it.el.classList.remove('err');
+  const el = it.el; el.querySelector('.cancel').hidden = false; el.querySelector('.dl').hidden = true; el.querySelector('.share').hidden = true;
+  const rv = el.querySelector('.result'); rv.hidden = true; rv.removeAttribute('src');
+  setMeta(it, 'Reading video…'); setBar(it, 0); refresh();
+  try {
+    const r = hasWebCodecs ? await fastCompress(it, s) : await legacyCompress(it, s);
+    if (!r) return;
+    finish(it, r, s);
+  } catch (e) {
+    if (it.cancelled) {
+      if (it.requeue) { it.requeue = false; it.state = 'queued'; setMeta(it, 'Waiting…'); }
+      else { it.state = 'cancelled'; setMeta(it, 'Cancelled. Press ✂️ Trim → Use whole video to start again.'); }
+    } else {
+      console.error(e);
+      it.state = 'error'; el.classList.add('err');
+      setMeta(it, friendly(e));
+    }
+  } finally {
+    el.querySelector('.cancel').hidden = true; setBar(it, null);
   }
-  $("pick").onchange=function(){if(this.files[0])run(this.files[0]).catch(function(){});this.value=""};
-  var d=$("drop");
-  ["dragenter","dragover"].forEach(function(e){d.addEventListener(e,function(ev){ev.preventDefault();d.classList.add("over")})});
-  ["dragleave","drop"].forEach(function(e){d.addEventListener(e,function(ev){ev.preventDefault();d.classList.remove("over")})});
-  d.addEventListener("drop",function(ev){var f=ev.dataTransfer.files[0];if(f&&/^video\//.test(f.type))run(f).catch(function(){})});
-})();
+}
+function friendly(e) {
+  const m = String(e && e.message || e);
+  if (/unsupported|not supported|Unrecognized|format/i.test(m)) return "This browser can't read this video format (" + m + "). Try Chrome or Edge, or convert it to MP4 first.";
+  if (/memory|allocation/i.test(m)) return 'Your device ran out of memory. Try a lower resolution, trim the video, or use a computer.';
+  return 'Something went wrong: ' + m;
+}
+async function fastCompress(it, s) {
+  const input = new Input({ source: new BlobSource(it.file), formats: ALL_FORMATS });
+  const vt = await input.getPrimaryVideoTrack();
+  if (!vt) throw new Error('No video found in this file');
+  const at = await input.getPrimaryAudioTrack();
+  const fullDur = await input.computeDuration();
+  const start = it.trim ? Math.min(it.trim.start, fullDur) : 0, end = it.trim && it.trim.end != null ? Math.min(it.trim.end, fullDur) : fullDur;
+  const dur = Math.max(0.1, end - start);
+  const sw = vt.displayWidth, sh = vt.displayHeight;
+  let k = s.res ? Math.min(1, s.res / Math.min(sw, sh)) : 1;
+  let w = even(sw * k), h = even(sh * k);
+  const stats = await vt.computePacketStats(120).catch(() => null);
+  const srcFps = stats && stats.averagePacketRate || 30;
+  const fps = s.fps && s.fps < srcFps - 0.5 ? s.fps : 0;
+
+  // If it already fits the size goal untouched, keep the original.
+  if (s.mode === 's' && !it.trim && it.file.size <= s.targetMB * 1048576 && !s.res) return { kept: true, blob: it.file, w: sw, h: sh, codec: '' };
+
+  const container = s.fmt;
+  const codecList = s.codec !== 'auto' ? [s.codec, ...(container === 'mp4' ? ['avc', 'hevc', 'vp9', 'av1'] : ['vp9', 'av1', 'vp8'])] : (container === 'mp4' ? ['avc', 'hevc', 'vp9', 'av1'] : ['vp9', 'av1', 'vp8']);
+  const codec = await getFirstEncodableVideoCodec([...new Set(codecList)], { width: w, height: h });
+  if (!codec) return legacyCompress(it, s);
+  let acodec = null, abps = 0;
+  if (at && s.audio !== 'off') {
+    abps = s.audio === 'low' ? 64000 : (s.mode === 's' && s.targetMB <= 16 ? 96000 : 128000);
+    acodec = await getFirstEncodableAudioCodec(container === 'mp4' ? ['aac', 'opus'] : ['opus', 'vorbis'], { numberOfChannels: 2, sampleRate: 48000, bitrate: abps });
+  }
+  // Size goal: work out the video bitrate from the length, leaving room for sound and the file container.
+  let vbps = 0;
+  if (s.mode === 's') {
+    const total = s.targetMB * 1048576 * 8 * 0.95;
+    vbps = Math.max(80000, total / dur - (at && s.audio !== 'off' ? abps : 0) - 20000);
+    const cap = w * h * (fps || srcFps) * 0.25; // no point going above "visually lossless"
+    vbps = Math.min(vbps, cap);
+  }
+  let attempt = 0, best = null;
+  while (attempt < 3) {
+    attempt++;
+    const output = new Output({ format: container === 'mp4' ? new Mp4OutputFormat({ fastStart: 'in-memory' }) : new WebMOutputFormat(), target: new BufferTarget() });
+    const quality = s.mode === 's' ? new Quality({ bitrate: Math.round(vbps), bitrateMode: 'variable' }) : new Quality(s.quality);
+    const audio = !at ? undefined : s.audio === 'off' ? { discard: true } : acodec ? { codec: acodec, bitrate: abps, forceTranscode: s.audio === 'low' || s.mode === 's', numberOfChannels: s.audio === 'low' ? 1 : undefined } : {};
+    const conv = it.conv = await Conversion.init({
+      input, output, tracks: 'primary', showWarnings: false,
+      video: { width: w, height: h, fit: 'fill', codec, quality, frameRate: fps || undefined, forceTranscode: true },
+      audio, trim: (start > 0 || end < fullDur) ? { start, end } : undefined,
+    });
+    if (!conv.isValid) {
+      const why = conv.discardedTracks.map(d => d.track.type + ': ' + d.reason).join(', ');
+      throw new Error('This video can\'t be converted here (' + why + ')');
+    }
+    const t0 = performance.now();
+    conv.onProgress = (p, tt) => {
+      const el = (performance.now() - t0) / 1000, speed = tt / Math.max(el, 0.01), eta = speed > 0 ? (dur - tt) / speed : 0;
+      setBar(it, p);
+      setMeta(it, (attempt > 1 ? 'Second pass to hit your size · ' : 'Compressing · ') + Math.round(p * 100) + '%' + (el > 1.5 && speed ? ' · ' + speed.toFixed(1) + '× speed · about ' + Math.ceil(eta) + 's left' : ''));
+    };
+    if (it.cancelled) throw new Error('cancelled');
+    await conv.execute();
+    const buf = output.target.buffer;
+    const blob = new Blob([buf], { type: container === 'mp4' ? 'video/mp4' : 'video/webm' });
+    best = { blob, w, h, codec, secs: (performance.now() - t0) / 1000, dur };
+    if (s.mode !== 's') break;
+    const target = s.targetMB * 1048576;
+    if (blob.size <= target) break;
+    // Overshot: shrink the bitrate in proportion and go again (and drop resolution if bitrate is getting silly).
+    vbps = vbps * (target * 0.93 / blob.size);
+    if (vbps / (w * h) < 0.04 && Math.min(w, h) > 360) { w = even(w * 0.75); h = even(h * 0.75); }
+  }
+  return best;
+}
+function finish(it, r, s) {
+  const el = it.el, base = it.file.name.replace(/\.[^.]+$/, '');
+  let out = r.blob, kept = r.kept;
+  if (!kept && out.size >= it.file.size && !it.trim) { out = it.file; kept = true; }
+  it.out = out; it.state = 'done';
+  const ext = out === it.file ? (it.file.name.match(/\.[^.]+$/) || ['.mp4'])[0] : (out.type === 'video/mp4' ? '.mp4' : '.webm');
+  it.name = base + (out === it.file ? '' : '-compressed') + ext;
+  if (it.url) URL.revokeObjectURL(it.url);
+  it.url = URL.createObjectURL(out);
+  const a = el.querySelector('.dl'); a.href = it.url; a.download = it.name; a.hidden = false;
+  if (mobile && navigator.canShare && navigator.canShare({ files: [new File([out], it.name, { type: out.type })] })) el.querySelector('.share').hidden = false;
+  const pct = Math.round((1 - out.size / it.file.size) * 100);
+  let m = mb(it.file.size) + ' → <b>' + mb(out.size) + '</b> ' + (kept ? '<span class="save">kept original (already small)</span>' : pct > 0 ? '<span class="save">−' + pct + '%</span>' : '<span class="grow">+' + (-pct) + '%</span>');
+  if (!kept) m += ' · ' + r.w + '×' + r.h + (r.codec ? ' · ' + (CODEC_NAME[r.codec] || r.codec) : '') + (r.secs ? ' · took ' + (r.secs < 60 ? Math.round(r.secs) + 's' : tfmt(r.secs)) : '');
+  if (s.mode === 's' && out.size > s.targetMB * 1048576) m += '<br><span class="grow">Still over ' + s.targetMB + ' MB. Try a lower resolution, or trim it.</span>';
+  setMeta(it, m);
+  const rv = el.querySelector('.result'); if (!kept) { rv.src = it.url; rv.hidden = false; }
+}
+
+// ---------- slow fallback for browsers without WebCodecs ----------
+async function legacyCompress(it, s) {
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) throw new Error("this browser can't compress video. Please use a recent Chrome, Edge, Safari or Firefox");
+  const v = document.createElement('video'); v.playsInline = true; v.src = it.src; v.muted = false;
+  await new Promise((ok, bad) => { v.onloadedmetadata = ok; v.onerror = () => bad(new Error('unsupported video format')); });
+  const start = it.trim ? it.trim.start : 0, end = it.trim && it.trim.end != null ? Math.min(it.trim.end, v.duration) : v.duration, dur = end - start;
+  const k = s.res ? Math.min(1, s.res / Math.min(v.videoWidth, v.videoHeight)) : 1, w = even(v.videoWidth * k), h = even(v.videoHeight * k);
+  const vbps = s.mode === 's' ? Math.max(150000, s.targetMB * 8388608 * 0.9 / dur - 96000) : { high: 3.5, medium: 2.5, low: 1.2 }[s.quality] * w * h;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+  const stream = c.captureStream(s.fps || 30);
+  if (s.audio !== 'off') { try { const ac = new AudioContext(), dst = ac.createMediaStreamDestination(); ac.createMediaElementSource(v).connect(dst); dst.stream.getAudioTracks().forEach(t => stream.addTrack(t)); } catch (e) {} }
+  const mime = ['video/mp4;codecs=avc1.42E01F,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+  const rec = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: Math.round(Math.min(vbps, 8e6)), audioBitsPerSecond: 96000 }), chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const stopped = new Promise(r => rec.onstop = r);
+  v.currentTime = start; await new Promise(r => v.onseeked = r);
+  rec.start(1000); await v.play();
+  let stop = false; it.legacyStop = () => { stop = true; };
+  await new Promise(done => { const draw = () => { if (stop || v.ended || v.currentTime >= end) return done(); x.drawImage(v, 0, 0, w, h); setBar(it, (v.currentTime - start) / dur); setMeta(it, 'Compressing (slow mode) · ' + Math.round((v.currentTime - start) / dur * 100) + '%'); requestAnimationFrame(draw); }; draw(); });
+  v.pause(); rec.stop(); await stopped; it.legacyStop = null;
+  if (stop) throw new Error('cancelled');
+  const type = (mime || 'video/webm').split(';')[0];
+  return { blob: new Blob(chunks, { type }), w, h, codec: '' };
+}
+
+// ---------- download all / input ----------
+$('zip').onclick = async () => {
+  const done = items.filter(i => i.state === 'done'); $('zip').disabled = true; $('zip').textContent = 'Packing ZIP…';
+  try { const z = await makeZip(done.map(i => ({ name: i.name, blob: i.out }))); const a = document.createElement('a'); a.href = URL.createObjectURL(z); a.download = 'compressed-videos.zip'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); }
+  finally { $('zip').disabled = false; $('zip').textContent = '⬇️ Download all (ZIP)'; }
+};
+$('clear').onclick = () => { for (const it of [...items]) removeItem(it); };
+$('pick').onchange = function () { addFiles(this.files); this.value = ''; };
+const d = $('drop');
+['dragenter', 'dragover'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.add('over'); }));
+['dragleave', 'drop'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.remove('over'); }));
+d.addEventListener('drop', ev => addFiles(ev.dataTransfer.files));
+window.addEventListener('dragover', ev => ev.preventDefault());
+window.addEventListener('drop', ev => { if (!d.contains(ev.target)) { ev.preventDefault(); addFiles(ev.dataTransfer.files); } });
+window.addEventListener('beforeunload', e => { if (running) { e.preventDefault(); e.returnValue = ''; } });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
 </script>
 <script src="../site.js"></script>
 </body>
